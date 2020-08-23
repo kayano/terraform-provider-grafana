@@ -4,10 +4,23 @@ WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=grafana
 GRAFANA_VERSION ?= "latest"
 
+HOSTNAME=terraform.karhoo.net
+NAMESPACE=cloudops
+NAME=grafana
+BINARY=terraform-provider-${NAME}
+VERSION=2.0.0
+OS_ARCH=darwin_amd64
+
+
 default: build
 
-build: fmtcheck
-	go install
+build:
+	go build -o ${BINARY}
+
+install: build
+	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
+	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
+
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1
