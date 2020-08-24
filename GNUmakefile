@@ -3,6 +3,7 @@ GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=grafana
 GRAFANA_VERSION ?= "latest"
+TEST_COUNT?=1
 
 default: build
 
@@ -13,7 +14,7 @@ test: fmtcheck
 	go test $(TEST) $(TESTARGS) -timeout=120s -parallel=4
 
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+	TF_ACC=1 go test $(TEST) -v -count $(TEST_COUNT) $(TESTARGS) -timeout 120m
 
 test-serv: fmtcheck
 	@docker pull "grafana/grafana:$(GRAFANA_VERSION)"
