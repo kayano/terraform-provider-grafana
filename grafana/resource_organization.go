@@ -1,7 +1,6 @@
 package grafana
 
 import (
-	"crypto/rand"
 	"errors"
 	"fmt"
 	"log"
@@ -269,7 +268,7 @@ func addIdsToChanges(d *schema.ResourceData, meta interface{}, changes []UserCha
 			return nil, errors.New(fmt.Sprintf("Error adding user %s. User does not exist in Grafana.", change.User.Email))
 		}
 		if !ok && create {
-			id, err = createUser(meta, change.User.Email)
+			id, err = createOrgUser(meta, change.User.Email)
 			if err != nil {
 				return nil, err
 			}
@@ -280,15 +279,13 @@ func addIdsToChanges(d *schema.ResourceData, meta interface{}, changes []UserCha
 	return output, nil
 }
 
-func createUser(meta interface{}, user string) (int64, error) {
+func createOrgUser(meta interface{}, user string) (int64, error) {
 	client := meta.(*gapi.Client)
-	id, n := int64(0), 64
-	bytes := make([]byte, n)
-	_, err := rand.Read(bytes)
+	id := int64(0)
+	pass, err := genPassword()
 	if err != nil {
 		return id, err
 	}
-	pass := string(bytes[:n])
 	u := gapi.User{
 		Name:     user,
 		Login:    user,
