@@ -6,36 +6,36 @@ import (
 	"strconv"
 	"testing"
 
-	gapi "github.com/nytm/go-grafana-api"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gapi "github.com/nytm/go-grafana-api"
 )
 
-func TestAccUser_basic(t *testing.T) {
-	var user gapi.User
-	resourceName := "grafana_user.test_user"
+func TestAccTeam_basic(t *testing.T) {
+	var team gapi.Team
+	resourceName := "grafana_team.test_team"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccUserCheckDestroy(&user),
+		CheckDestroy: testAccTeamCheckDestroy(&team),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_basic,
+				Config: testAccTeamConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccUserCheckExists(resourceName, &user),
+					testAccTeamCheckExists(resourceName, &team),
 					resource.TestMatchResourceAttr(
 						resourceName, "id", regexp.MustCompile(`\d+`),
 					),
-					resource.TestCheckResourceAttr(resourceName, "email", "test.user@example.com"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test team"),
 				),
 			},
 		},
 	})
 }
 
-func testAccUserCheckExists(rn string, user *gapi.User) resource.TestCheckFunc {
+func testAccTeamCheckExists(rn string, team *gapi.Team) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[rn]
 		if !ok {
@@ -53,41 +53,33 @@ func testAccUserCheckExists(rn string, user *gapi.User) resource.TestCheckFunc {
 		}
 
 		if id == 0 {
-			return fmt.Errorf("got a user id of 0")
+			return fmt.Errorf("got a team id of 0")
 		}
 
-		users, err := client.Users()
+		gotTeam, err := client.Team(id)
 		if err != nil {
-			return fmt.Errorf("error getting users: %v", err)
+			return fmt.Errorf("error getting team: %v", err)
 		}
 
-		var gotUser *gapi.User
-		for _, u := range users {
-			if u.Id == id {
-				gotUser = &u
-				break
-			}
-		}
-
-		*user = *gotUser
+		*team = *gotTeam
 
 		return nil
 	}
 }
 
-func testAccUserCheckDestroy(user *gapi.User) resource.TestCheckFunc {
+func testAccTeamCheckDestroy(team *gapi.Team) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := testAccProvider.Meta().(*gapi.Client)
-		_, err := client.UserByEmail(user.Email)
+		_, err := client.Team(team.Id)
 		if err == nil {
-			return fmt.Errorf("user still exists")
+			return fmt.Errorf("team still exists")
 		}
 		return nil
 	}
 }
 
-const testAccUserConfig_basic = `
-resource "grafana_user" "test_user" {
-    email = "test.user@example.com"
+const testAccTeamConfig_basic = `
+resource "grafana_team" "test_team" {
+    name = "test team"
 }
 `

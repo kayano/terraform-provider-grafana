@@ -32,6 +32,7 @@ func Provider() *schema.Provider {
 			"grafana_folder":             ResourceFolder(),
 			"grafana_organization":       ResourceOrganization(),
 			"grafana_user":               resourceUser(),
+			"grafana_team":               resourceTeam(),
 		},
 
 		ConfigureFunc: providerConfigure,
